@@ -72,3 +72,4 @@ t/vm_copy
 t/gnumach
 t/mlock
 t/mmap32th_bit
+t/sysheaders

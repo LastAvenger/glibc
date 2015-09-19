@@ -1,16 +1,18 @@
-Subject: Baseline for our topic branches.
+From upstream git:
 
----
+commit 9f2a4fbc3c3265227f1493469ad67a81a786c3b1
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Wed Apr 16 23:43:28 2014 +0200
 
-This need not strictly be a TopGit branch, but it is for easy synchronization
-between different machines.
+    hurd: Move dtv, dtv_t, tcbhead_t declaration to per-arch file.
 
-As the baseline is merged into the topic branches, it is forward-only.
 
-To advance it:
+commit 3c799e913168a84197c08e62d47be666329308e0
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Wed Apr 16 23:45:36 2014 +0200
 
-    $ echo [SHA1] > .topdeps
-    $ git commit -m Advance. -- .topdeps
-    $ tg update
-
----
+    hurd: Add i386 fields to TLS structure
+    
+        * sysdeps/mach/hurd/i386/tls.h (tcbhead_t): Add multiple_threads,
+        sysinfo, stack_guard, pointer_guard, gscope_flag, private_futex,
+        __private_tm, __private_ss fields.

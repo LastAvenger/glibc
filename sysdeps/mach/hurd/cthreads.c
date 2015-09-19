@@ -22,7 +22,7 @@
 char __libc_lock_self0[0];
 #if IS_IN (rtld)
 /* We don't support static tls relocation so early, but we do not have threads
- *  * there either anyway */
+   there either anyway.  */
 static char __libc_lock_self[0];
 #else
 static __thread char __libc_lock_self[0];

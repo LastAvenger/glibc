@@ -29,31 +29,6 @@
 # include <mach.h>
 
 
-/* Type for the dtv.  */
-typedef union dtv
-{
-  size_t counter;
-  struct
-  {
-    void *val;
-    bool is_static;
-  } pointer;
-} dtv_t;
-
-
-/* Type of the TCB.  */
-typedef struct
-{
-  void *tcb;			/* Points to this structure.  */
-  dtv_t *dtv;			/* Vector of pointers to TLS data.  */
-  thread_t self;		/* This thread's control port.  */
-
-  /* Keep this field last */
-  mach_port_t reply_port;	/* This thread's reply port.  */
-  struct hurd_sigstate *_hurd_sigstate;
-} tcbhead_t;
-
-
 /* This is the size of the initial TCB.  */
 # define TLS_INIT_TCB_SIZE sizeof (tcbhead_t)
 

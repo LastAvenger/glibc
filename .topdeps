@@ -73,3 +73,4 @@ t/gnumach
 t/mlock
 t/mmap32th_bit
 t/sysheaders
+t/tcbhead_t

@@ -106,12 +106,14 @@ __libc_sendmsg (int fd, const struct msghdr *message, int flags)
 	}
     }
 
-  /* SCM_RIGHTS support: get the number of fds to send.  */
+  /* Allocate enough room for ports.  */
   cmsg = CMSG_FIRSTHDR (message);
   for (; cmsg; cmsg = CMSG_NXTHDR (message, cmsg))
     if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
       nports += (cmsg->cmsg_len - CMSG_ALIGN (sizeof (struct cmsghdr)))
 		/ sizeof (int);
+    else if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_CREDS)
+      nports++;
 
   if (nports)
     ports = __alloca (nports * sizeof (mach_port_t));
@@ -123,6 +125,7 @@ __libc_sendmsg (int fd, const struct msghdr *message, int flags)
     {
       if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
 	{
+	  /* SCM_RIGHTS support: send FDs.   */
 	  fds = (int *) CMSG_DATA (cmsg);
 	  nfds = (cmsg->cmsg_len - CMSG_ALIGN (sizeof (struct cmsghdr)))
 		 / sizeof (int);
@@ -144,6 +147,38 @@ __libc_sendmsg (int fd, const struct msghdr *message, int flags)
 	      if (err)
 		goto out;
 	    }
+	}
+      else if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_CREDS)
+	{
+	  /* SCM_CREDS support: send credentials.   */
+	  mach_port_t rendezvous  = __mach_reply_port (), reply;
+	  struct cmsgcred *ucredp;
+
+	  err = mach_port_insert_right (mach_task_self (), rendezvous,
+					rendezvous, MACH_MSG_TYPE_MAKE_SEND);
+	  ports[nports++] = rendezvous;
+	  if (err)
+	    goto out;
+
+	  ucredp = (struct cmsgcred *) CMSG_DATA(cmsg);
+	  /* Fill in credentials data */
+	  ucredp->cmcred_pid = __getpid();
+	  ucredp->cmcred_uid = __getuid();
+	  ucredp->cmcred_euid = __geteuid();
+	  ucredp->cmcred_gid = __getgid();
+	  ucredp->cmcred_ngroups =
+	    __getgroups (sizeof (ucredp->cmcred_groups) / sizeof (gid_t),
+			 ucredp->cmcred_groups);
+
+	  /* And make auth server authenticate us.  */
+	  reply = __mach_reply_port();
+	  err = __USEPORT
+	    (AUTH, __auth_user_authenticate_request (port,
+					reply, MACH_MSG_TYPE_MAKE_SEND_ONCE,
+					rendezvous, MACH_MSG_TYPE_MAKE_SEND));
+	  mach_port_deallocate (__mach_task_self (), reply);
+	  if (err)
+	    goto out;
 	}
     }
 

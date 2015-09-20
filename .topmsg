@@ -1,4 +1,16 @@
-From 1b911148009f696717da0b676d6d10af85d5aefb Mon Sep 17 00:00:00 2001
-From: Emilio Pozuelo Monfort <pochu27@gmail.com>
-Date: Sat, 17 Jul 2010 22:09:13 +0200
-Subject: [PATCH] Add support to send file descriptors over Unix sockets
+Subject: [PATCH] hurd: SCM_CREDS support
+
+Svante Signell  <svante.signell@gmail.com>
+Samuel Thibault  <samuel.thibault@ens-lyon.org>
+
+	* sysdeps/mach/hurd/sendmsg.c (__libc_sendmsg): On SCM_CREDS
+	control messages, record uids, pass a rendez-vous port in the
+	control message, and call __auth_user_authenticate_request to
+	make auth send credentials on that port.  Do not wait for a
+	reply.
+
+	* sysdeps/mach/hurd/recvmsg.c (contains_uid, contains_gid,
+	check_auth): New functions.
+	(__libc_recvmsg): On SCM_CREDS control messages, call check_auth
+	to check the passed credentials thanks to the answer from the
+	auth server.

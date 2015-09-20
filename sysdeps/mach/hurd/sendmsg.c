@@ -106,7 +106,7 @@ __libc_sendmsg (int fd, const struct msghdr *message, int flags)
 	}
     }
 
-  /* SCM_RIGHTS support: get the number of fds to send.  */
+  /* Allocate enough room for ports.  */
   cmsg = CMSG_FIRSTHDR (message);
   for (; cmsg; cmsg = CMSG_NXTHDR (message, cmsg))
     if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
@@ -123,6 +123,7 @@ __libc_sendmsg (int fd, const struct msghdr *message, int flags)
     {
       if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
 	{
+	  /* SCM_RIGHTS support: send FDs.   */
 	  fds = (int *) CMSG_DATA (cmsg);
 	  nfds = (cmsg->cmsg_len - CMSG_ALIGN (sizeof (struct cmsghdr)))
 		 / sizeof (int);

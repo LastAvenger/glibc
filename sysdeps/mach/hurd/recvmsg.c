@@ -32,15 +32,15 @@ __libc_recvmsg (int fd, struct msghdr *message, int flags)
   addr_port_t aport;
   char *data = NULL;
   mach_msg_type_number_t len = 0;
-  mach_port_t *ports, *newports;
+  mach_port_t *ports, *newports = NULL;
   mach_msg_type_number_t nports = 0;
   struct cmsghdr *cmsg;
   char *cdata = NULL;
   mach_msg_type_number_t clen = 0;
   size_t amount;
   char *buf;
-  int nfds, *fds;
-  int i, j;
+  int nfds, *opened_fds = NULL;
+  int i, ii, j;
 
   error_t reauthenticate (mach_port_t port, mach_port_t *result)
     {
@@ -155,28 +155,56 @@ __libc_recvmsg (int fd, struct msghdr *message, int flags)
     message->msg_controllen = clen;
   memcpy (message->msg_control, cdata, message->msg_controllen);
 
-  /* SCM_RIGHTS ports.  */
   if (nports > 0)
     {
       newports = __alloca (nports * sizeof (mach_port_t));
+      opened_fds = __alloca (nports * sizeof (int));
+    }
 
-      /* Reauthenticate all ports here.  */
-      for (i = 0; i < nports; i++)
-	{
-	  err = reauthenticate (ports[i], &newports[i]);
-	  __mach_port_deallocate (__mach_task_self (), ports[i]);
-	  if (err)
-	    {
-	      for (j = 0; j < i; j++)
-		__mach_port_deallocate (__mach_task_self (), newports[j]);
-	      for (j = i+1; j < nports; j++)
-		__mach_port_deallocate (__mach_task_self (), ports[j]);
+  /* This counts how many ports we processed completely.  */
+  i = 0;
 
-	      __vm_deallocate (__mach_task_self (), (vm_address_t) cdata, clen);
-	      __hurd_fail (err);
-	    }
-	}
+  for (cmsg = CMSG_FIRSTHDR (message);
+       cmsg;
+       cmsg = CMSG_NXTHDR (message, cmsg))
+  {
+    if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
+      {
+	/* SCM_RIGHTS support.  */
+	/* The fd's flags are passed in the control data.  */
+	int *fds = (int *) CMSG_DATA (cmsg);
+	nfds = (cmsg->cmsg_len - CMSG_ALIGN (sizeof (struct cmsghdr)))
+	       / sizeof (int);
 
+	for (j = 0; j < nfds; j++)
+	  {
+	    err = reauthenticate (ports[i], &newports[i]);
+	    if (err)
+	      goto cleanup;
+	    fds[j] = opened_fds[i] = _hurd_intern_fd (newports[i], fds[j], 0);
+	    if (fds[j] == -1)
+	      {
+		err = errno;
+		__mach_port_deallocate (__mach_task_self (), newports[i]);
+		goto cleanup;
+	      }
+	    i++;
+	  }
+      }
+  }
+
+  for (i = 0; i < nports; i++)
+    __mach_port_deallocate (mach_task_self (), ports[i]);
+
+  __vm_deallocate (__mach_task_self (), (vm_address_t) cdata, clen);
+
+  return (buf - data);
+
+cleanup:
+  /* Clean up all the file descriptors from port 0 to i-1.  */
+  if (nports > 0)
+    {
+      ii = 0;
       j = 0;
       for (cmsg = CMSG_FIRSTHDR (message);
 	   cmsg;
@@ -184,59 +212,20 @@ __libc_recvmsg (int fd, struct msghdr *message, int flags)
 	{
 	  if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
 	    {
-	      fds = (int *) CMSG_DATA (cmsg);
 	      nfds = (cmsg->cmsg_len - CMSG_ALIGN (sizeof (struct cmsghdr)))
 		     / sizeof (int);
-
-	      for (i = 0; i < nfds && j < nports; i++)
-		{
-		  /* The fd's flags are passed in the control data.  */
-		  fds[i] = _hurd_intern_fd (newports[j++], fds[i], 0);
-		  if (fds[i] == -1)
-		    {
-		      err = errno;
-		      goto cleanup;
-		    }
-		}
+	      for (j = 0; j < nfds && ii < i; j++, ii++)
+	      {
+		_hurd_fd_close (_hurd_fd_get (opened_fds[ii]));
+		__mach_port_deallocate (__mach_task_self (), newports[ii]);
+		__mach_port_deallocate (__mach_task_self (), ports[ii]);
+	      }
 	    }
-	}
-
-      if (j != nports)
-	err = EGRATUITOUS;
-
-      if (err)
-      cleanup:
-	{
-	  /* Clean up all the file descriptors.  */
-	  nports = j;
-	  j = 0;
-	  for (cmsg = CMSG_FIRSTHDR (message);
-	       cmsg;
-	       cmsg = CMSG_NXTHDR (message, cmsg))
-	    {
-	      if (cmsg->cmsg_level == SOL_SOCKET
-		  && cmsg->cmsg_type == SCM_RIGHTS)
-		{
-		  fds = (int *) CMSG_DATA (cmsg);
-		  nfds = (cmsg->cmsg_len
-			  - CMSG_ALIGN (sizeof (struct cmsghdr)))
-			 / sizeof (int);
-		  for (i = 0; i < nfds && j < nports; i++, j++)
-		    _hurd_fd_close (_hurd_fd_get (fds[i]));
-		}
-	    }
-
-	  for (; j < nports; j++)
-	    __mach_port_deallocate (__mach_task_self (), newports[j]);
-
-	  __vm_deallocate (__mach_task_self (), (vm_address_t) cdata, clen);
-	  __hurd_fail (err);
 	}
     }
 
   __vm_deallocate (__mach_task_self (), (vm_address_t) cdata, clen);
-
-  return (buf - data);
+  return __hurd_fail (err);
 }
 
 weak_alias (__libc_recvmsg, recvmsg)

@@ -8,9 +8,10 @@ Samuel Thibault  <samuel.thibault@ens-lyon.org>
 	control message, and call __auth_user_authenticate_request to
 	make auth send credentials on that port.  Do not wait for a
 	reply.
-
 	* sysdeps/mach/hurd/recvmsg.c (contains_uid, contains_gid,
 	check_auth): New functions.
 	(__libc_recvmsg): On SCM_CREDS control messages, call check_auth
 	to check the passed credentials thanks to the answer from the
 	auth server.
+	* hurd/Makefile (user-interfaces): Add auth_request and
+	auth_reply.

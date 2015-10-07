@@ -1,16 +1,9 @@
-Subject: Baseline for our topic branches.
+hurd-i386 defines NO_HIDDEN, thus __GI_* versions are not available.
 
----
+This was introduced by
 
-This need not strictly be a TopGit branch, but it is for easy synchronization
-between different machines.
+https://sourceware.org/bugzilla/show_bug.cgi?id=15605
 
-As the baseline is merged into the topic branches, it is forward-only.
+When building with -O2, we shouldn't actually have the issue, but we
+should try not to define NO_HIDDEN
 
-To advance it:
-
-    $ echo [SHA1] > .topdeps
-    $ git commit -m Advance. -- .topdeps
-    $ tg update
-
----

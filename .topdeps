@@ -76,3 +76,4 @@ t/sysheaders
 t/tcbhead_t
 t/sendmsg-SCM_CREDS
 t/mach-hurd-link
+t/NO_HIDDEN

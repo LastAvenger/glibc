@@ -1,16 +1,11 @@
-Subject: Baseline for our topic branches.
+From: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Subject: [PATCH] Add -lmachuser -lhurduser to libc.so on GNU/Hurd.
 
----
+http://lists.gnu.org/archive/html/bug-hurd/2011-03/msg00112.html
 
-This need not strictly be a TopGit branch, but it is for easy synchronization
-between different machines.
+2011-03-29  Samuel Thibault  <samuel.thibault@ens-lyon.org>
 
-As the baseline is merged into the topic branches, it is forward-only.
+        * Makerules ($(inst_libdir)/libc.so): Add -lmachuser -lhurduser to
+        libc.so on GNU/Hurd.
 
-To advance it:
-
-    $ echo [SHA1] > .topdeps
-    $ git commit -m Advance. -- .topdeps
-    $ tg update
-
----
+It's still unclear what we want to aim for.

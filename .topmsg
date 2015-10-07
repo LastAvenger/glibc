@@ -1,7 +1,3 @@
-From: Thomas Schwinge <thomas@schwinge.name>
-Subject: [PATCH] tls-threadvar
-
-replace the custom threadvar mechanism with generic TLS.
-That will fix sigaltstack.
-
-Note: the added reply_port and _hurd_sigstate fields should be kept last.
+glibc 2.19 does not have the IS_IN generic macro yet.
+To be removed for glibc versions which have it (and thus don't define
+IS_IN_rtld)

@@ -78,3 +78,4 @@ t/sendmsg-SCM_CREDS
 t/mach-hurd-link
 t/NO_HIDDEN
 t/2.19-fix
+cvs/task_notify

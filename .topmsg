@@ -1,16 +1,8 @@
-Subject: Baseline for our topic branches.
+commit 58a3a98d8f3488b659318b1a1c6efc169a6f06bf
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Thu Oct 8 02:14:43 2015 +0200
 
----
+    Add task_notify to mach_interface_list
+    
+    * sysdeps/mach/configure.ac (mach_interface_list): Add task_notify.
 
-This need not strictly be a TopGit branch, but it is for easy synchronization
-between different machines.
-
-As the baseline is merged into the topic branches, it is forward-only.
-
-To advance it:
-
-    $ echo [SHA1] > .topdeps
-    $ git commit -m Advance. -- .topdeps
-    $ tg update
-
----

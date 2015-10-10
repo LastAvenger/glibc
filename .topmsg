@@ -1,16 +1,5 @@
-Subject: Baseline for our topic branches.
+Make _hurd_raise_signal return errors
 
----
-
-This need not strictly be a TopGit branch, but it is for easy synchronization
-between different machines.
-
-As the baseline is merged into the topic branches, it is forward-only.
-
-To advance it:
-
-    $ echo [SHA1] > .topdeps
-    $ git commit -m Advance. -- .topdeps
-    $ tg update
-
----
+* hurd/hurd-raise.c (_hurd_raise_signal): Set errno to error returned
+by __msg_sig_post.
+* hurd/hurd/signal.h (_hurd_raise_signal): Add int return type.

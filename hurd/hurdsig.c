@@ -352,7 +352,7 @@ interrupted_reply_port_location (thread_t thread,
   mach_port_t *portloc = &THREAD_TCB(thread, thread_state)->reply_port;
 
   if (sigthread && _hurdsig_catch_memory_fault (portloc))
-    /* Faulted trying to read the stack.  */
+    /* Faulted trying to read the TCB.  */
     return NULL;
 
   /* Fault now if this pointer is bogus.  */

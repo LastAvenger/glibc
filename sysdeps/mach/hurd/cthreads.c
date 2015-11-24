@@ -20,19 +20,6 @@
 #include <stdlib.h>
 
 char __libc_lock_self0[0];
-#if IS_IN (rtld)
-/* We don't support static tls relocation so early, but we do not have threads
-   there either anyway.  */
-static char __libc_lock_self[0];
-#else
-static __thread char __libc_lock_self[0];
-#endif
-
-void *
-__libc_get_lock_self(void)
-{
-  return (void*) &__libc_lock_self;
-}
 
 /* Placeholder for key creation routine from Hurd cthreads library.  */
 int

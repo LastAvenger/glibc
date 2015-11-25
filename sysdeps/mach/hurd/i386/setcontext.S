@@ -33,7 +33,7 @@ ENTRY(__setcontext)
 	leal	oSIGMASK(%eax), %eax
 	movl	%eax, 4(%esp)
 	movl	$SIG_SETMASK, (%esp)
-	call	HIDDEN_JUMPTARGET (__sigprocmask)
+	call	JUMPTARGET (__sigprocmask)
 	addl	$12, %esp
 	cfi_adjust_cfa_offset (-12)
 	testl	%eax, %eax

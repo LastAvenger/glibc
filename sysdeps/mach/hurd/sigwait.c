@@ -134,4 +134,5 @@ all_done:
   return 0;
 }
 
+libc_hidden_def (__sigwait)
 weak_alias (__sigwait, sigwait)

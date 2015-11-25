@@ -80,3 +80,4 @@ t/NO_HIDDEN
 t/2.19-fix
 cvs/task_notify
 cvs/hurd_raise_signal
+cvs/hidden

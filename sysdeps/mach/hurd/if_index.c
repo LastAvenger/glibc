@@ -53,7 +53,7 @@ libc_hidden_def (if_nametoindex)
 
 /* Free the structure IFN returned by if_nameindex.  */
 void
-if_freenameindex (struct if_nameindex *ifn)
+__if_freenameindex (struct if_nameindex *ifn)
 {
   struct if_nameindex *ptr = ifn;
   while (ptr->if_name || ptr->if_index)
@@ -63,12 +63,15 @@ if_freenameindex (struct if_nameindex *ifn)
     }
   free (ifn);
 }
+libc_hidden_def (__if_freenameindex)
+weak_alias (__if_freenameindex, if_freenameindex)
+libc_hidden_weak (if_freenameindex)
 
 /* Return an array of if_nameindex structures, one for each network
    interface present, plus one indicating the end of the array.  On
    error, return NULL.  */
 struct if_nameindex *
-if_nameindex (void)
+__if_nameindex (void)
 {
   error_t err = 0;
   char data[2048];
@@ -148,6 +151,8 @@ if_nameindex (void)
   __set_errno (err);
   return idx;
 }
+weak_alias (__if_nameindex, if_nameindex)
+libc_hidden_weak (if_nameindex)
 
 /* Store the name of the interface corresponding to index IFINDEX in
    IFNAME (which has space for at least IFNAMSIZ characters).  Return

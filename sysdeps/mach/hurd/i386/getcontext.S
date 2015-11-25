@@ -63,7 +63,7 @@ ENTRY(__getcontext)
 	movl	%eax, 8(%esp)
 	movl	$0, 4(%esp)
 	movl	$SIG_BLOCK, (%esp)
-	call	HIDDEN_JUMPTARGET (__sigprocmask)
+	call	JUMPTARGET (__sigprocmask)
 	addl	$12, %esp
 	cfi_adjust_cfa_offset (-12)
 	/* Propagate %eax (and errno, in case).  */

@@ -356,6 +356,7 @@ cleanup:
 	  else if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_CREDS)
 	    {
 	      __mach_port_deallocate (__mach_task_self (), ports[ii]);
+	      ii++;
 	    }
 	}
     }

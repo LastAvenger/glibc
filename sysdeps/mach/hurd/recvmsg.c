@@ -41,6 +41,7 @@ __libc_recvmsg (int fd, struct msghdr *message, int flags)
   char *buf;
   int nfds, *opened_fds = NULL;
   int i, ii, j;
+  int newfds;
 
   error_t reauthenticate (mach_port_t port, mach_port_t *result)
     {
@@ -163,6 +164,8 @@ __libc_recvmsg (int fd, struct msghdr *message, int flags)
 
   /* This counts how many ports we processed completely.  */
   i = 0;
+  /* This counts how many new fds we create.  */
+  newfds = 0;
 
   for (cmsg = CMSG_FIRSTHDR (message);
        cmsg;
@@ -178,17 +181,19 @@ __libc_recvmsg (int fd, struct msghdr *message, int flags)
 
 	for (j = 0; j < nfds; j++)
 	  {
-	    err = reauthenticate (ports[i], &newports[i]);
+	    err = reauthenticate (ports[i], &newports[newfds]);
 	    if (err)
 	      goto cleanup;
-	    fds[j] = opened_fds[i] = _hurd_intern_fd (newports[i], fds[j], 0);
+	    fds[j] = opened_fds[newfds] = _hurd_intern_fd (newports[newfds],
+							   fds[j], 0);
 	    if (fds[j] == -1)
 	      {
 		err = errno;
-		__mach_port_deallocate (__mach_task_self (), newports[i]);
+		__mach_port_deallocate (__mach_task_self (), newports[newfds]);
 		goto cleanup;
 	      }
 	    i++;
+	    newfds++;
 	  }
       }
   }
@@ -205,7 +210,7 @@ cleanup:
   if (nports > 0)
     {
       ii = 0;
-      j = 0;
+      newfds = 0;
       for (cmsg = CMSG_FIRSTHDR (message);
 	   cmsg;
 	   cmsg = CMSG_NXTHDR (message, cmsg))
@@ -214,10 +219,10 @@ cleanup:
 	    {
 	      nfds = (cmsg->cmsg_len - CMSG_ALIGN (sizeof (struct cmsghdr)))
 		     / sizeof (int);
-	      for (j = 0; j < nfds && ii < i; j++, ii++)
+	      for (j = 0; j < nfds && ii < i; j++, ii++, newfds++)
 	      {
-		_hurd_fd_close (_hurd_fd_get (opened_fds[ii]));
-		__mach_port_deallocate (__mach_task_self (), newports[ii]);
+		_hurd_fd_close (_hurd_fd_get (opened_fds[newfds]));
+		__mach_port_deallocate (__mach_task_self (), newports[newfds]);
 		__mach_port_deallocate (__mach_task_self (), ports[ii]);
 	      }
 	    }
